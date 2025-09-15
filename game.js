@@ -7,6 +7,8 @@ class QuizGame {
         this.isAnswered = false;
         this.playerName = '';
         this.playerEmail = '';
+        this.startTime = null;
+        this.endTime = null;
 
         // Get elements that exist in your HTML
         this.questionEl = document.getElementById('question');
@@ -20,11 +22,180 @@ class QuizGame {
         this.gameOverEl = document.getElementById('game-over');
         this.questionContainerEl = document.getElementById('question-container') || document.querySelector('.question-container');
 
-        // Set white background
-        document.body.style.backgroundColor = 'white';
-        document.body.style.fontFamily = 'Arial, sans-serif';
-
+        // Set up full screen black and white theme
+        this.setupGlobalStyles();
         this.showWelcomePopup();
+    }
+
+    setupGlobalStyles() {
+        // Remove any existing styles and set clean black/white theme with color coding
+        const style = document.createElement('style');
+        style.textContent = `
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            
+            html, body {
+                height: 100%;
+                width: 100%;
+                overflow-x: hidden;
+            }
+            
+            body {
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                font-family: 'Source Code Pro', 'Courier New', monospace !important;
+                line-height: 1.6;
+                font-size: 16px;
+            }
+            
+            /* Enhanced Answer Button Styles */
+            .btn-answer {
+                transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .btn-answer::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                transition: left 0.4s ease;
+                z-index: -1;
+            }
+            
+            /* Correct Answer - Green */
+            .btn-answer.correct {
+                background-color: #22c55e !important;
+                color: #ffffff !important;
+                border-color: #16a34a !important;
+                box-shadow: 0 8px 25px rgba(34, 197, 94, 0.4) !important;
+                transform: translateY(-3px) scale(1.02) !important;
+                font-weight: 700 !important;
+            }
+            
+            .btn-answer.correct::before {
+                background: linear-gradient(45deg, #22c55e, #16a34a);
+                left: 0;
+            }
+            
+            /* Wrong Answer - Red */
+            .btn-answer.incorrect {
+                background-color: #ef4444 !important;
+                color: #ffffff !important;
+                border-color: #dc2626 !important;
+                box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4) !important;
+                transform: translateY(-2px) scale(0.98) !important;
+                opacity: 0.8 !important;
+            }
+            
+            .btn-answer.incorrect::before {
+                background: linear-gradient(45deg, #ef4444, #dc2626);
+                left: 0;
+            }
+            
+            /* Selected but not yet revealed */
+            .btn-answer.selected {
+                background-color: #2e353fff !important;
+                color: #ffffff !important;
+                border-color: #1c2027ff !important;
+                transform: translateY(-2px) !important;
+                box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3) !important;
+            }
+            
+            /* Hover effects for non-disabled buttons */
+            .btn-answer:not(:disabled):hover {
+                transform: translateY(-3px) !important;
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+            }
+            
+            /* Disabled state */
+            .btn-answer:disabled {
+                cursor: not-allowed !important;
+                pointer-events: none;
+            }
+            
+            /* Animation for correct answer reveal */
+            @keyframes correctPulse {
+                0% { transform: translateY(-3px) scale(1.02); }
+                50% { transform: translateY(-3px) scale(1.05); }
+                100% { transform: translateY(-3px) scale(1.02); }
+            }
+            
+            .btn-answer.correct {
+                animation: correctPulse 0.6s ease-in-out;
+            }
+            
+            /* Animation for incorrect answer */
+            @keyframes incorrectShake {
+                0%, 100% { transform: translateY(-2px) scale(0.98) translateX(0); }
+                25% { transform: translateY(-2px) scale(0.98) translateX(-3px); }
+                75% { transform: translateY(-2px) scale(0.98) translateX(3px); }
+            }
+            
+            .btn-answer.incorrect {
+                animation: incorrectShake 0.5s ease-in-out;
+            }
+            
+            /* Score display enhancements */
+            .score-highlight {
+                background: linear-gradient(45deg, #22c55e, #16a34a) !important;
+                color: white !important;
+                padding: 0.2rem 0.6rem !important;
+                border-radius: 4px !important;
+                animation: scoreUpdate 0.5s ease-out !important;
+            }
+            
+            @keyframes scoreUpdate {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.2); }
+                100% { transform: scale(1); }
+            }
+            
+            @media (max-width: 768px) {
+                body {
+                    font-size: 14px;
+                }
+                
+                .btn-answer.correct,
+                .btn-answer.incorrect {
+                    transform: translateY(-1px) scale(1.01) !important;
+                }
+            }
+            
+            /* Enhanced visual feedback */
+            .question-container.answered {
+                animation: questionComplete 0.6s ease-out;
+            }
+            
+            @keyframes questionComplete {
+                0% { opacity: 1; }
+                50% { opacity: 0.8; }
+                100% { opacity: 1; }
+            }
+            
+            /* Next button enhancement */
+            .next-btn.show {
+                animation: slideInUp 0.5s ease-out !important;
+            }
+            
+            @keyframes slideInUp {
+                from {
+                    transform: translateY(30px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
     }
 
     showWelcomePopup() {
@@ -34,81 +205,174 @@ class QuizGame {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            width: 100vw;
+            height: 100vh;
+            background: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
-            animation: fadeIn 0.5s ease-in;
+            z-index: 10000;
+            animation: fadeIn 0.6s ease-in;
         `;
 
         popup.innerHTML = `
-            <div style="
-                background: white;
-                padding: 40px;
-                border-radius: 15px;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            <div class="welcome-container" style="
+                background: #ffffff;
+                border: 4px solid #000000;
+                padding: 3rem;
                 text-align: center;
-                max-width: 400px;
-                width: 90%;
-                animation: slideIn 0.5s ease-out;
+                max-width: 90vw;
+                max-height: 90vh;
+                width: 100%;
+                max-width: 600px;
+                position: relative;
+                animation: slideInScale 0.8s ease-out;
+                overflow-y: auto;
             ">
-                <h2 style="color: #333; margin-bottom: 30px; font-size: 28px;">🎯 Welcome to Quiz Challenge!</h2>
-                <p style="color: #666; margin-bottom: 25px; font-size: 16px;">Enter your details to start the quiz</p>
-                
-                <div style="margin-bottom: 20px; text-align: left;">
-                    <label style="display: block; margin-bottom: 8px; color: #333; font-weight: bold;">Name:</label>
-                    <input type="text" id="player-name" placeholder="Enter your name" style="
-                        width: 100%;
-                        padding: 12px;
-                        border: 2px solid #ddd;
-                        border-radius: 8px;
-                        font-size: 16px;
-                        box-sizing: border-box;
-                        transition: border-color 0.3s;
-                    " />
+                <!-- Header -->
+                <div class="welcome-header" style="
+                    border-bottom: 3px solid #000000;
+                    padding-bottom: 2rem;
+                    margin-bottom: 2.5rem;
+                ">
+                    <h1 style="
+                        color: #000000;
+                        margin-bottom: 1rem;
+                        font-size: clamp(2rem, 5vw, 3rem);
+                        font-weight: 900;
+                        text-transform: uppercase;
+                        letter-spacing: 2px;
+                        line-height: 1.2;
+                    ">QUIZ CHALLENGE</h1>
+                    <p style="
+                        color: #000000;
+                        font-size: clamp(1rem, 3vw, 1.2rem);
+                        font-weight: 600;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                    ">ENTER YOUR DETAILS TO BEGIN</p>
                 </div>
                 
-                <div style="margin-bottom: 30px; text-align: left;">
-                    <label style="display: block; margin-bottom: 8px; color: #333; font-weight: bold;">Email:</label>
-                    <input type="email" id="player-email" placeholder="Enter your email" style="
-                        width: 100%;
-                        padding: 12px;
-                        border: 2px solid #ddd;
-                        border-radius: 8px;
-                        font-size: 16px;
-                        box-sizing: border-box;
-                        transition: border-color 0.3s;
-                    " />
+                <!-- Form Section -->
+                <div class="form-section" style="
+                    margin-bottom: 2.5rem;
+                ">
+                    <div class="input-group" style="
+                        margin-bottom: 2rem;
+                        text-align: left;
+                    ">
+                        <label style="
+                            display: block;
+                            margin-bottom: 0.8rem;
+                            color: #000000;
+                            font-weight: 700;
+                            font-size: 1rem;
+                            text-transform: uppercase;
+                            letter-spacing: 1px;
+                        ">FULL NAME:</label>
+                        <input type="text" id="player-name" placeholder="Enter your full name" style="
+                            width: 100%;
+                            padding: 1rem 1.2rem;
+                            border: 3px solid #000000;
+                            background: #ffffff;
+                            color: #000000;
+                            font-size: 1.1rem;
+                            font-weight: 500;
+                            font-family: 'Source Code Pro', monospace;
+                            transition: all 0.3s ease;
+                            outline: none;
+                        " />
+                    </div>
+                    
+                    <div class="input-group" style="
+                        margin-bottom: 2rem;
+                        text-align: left;
+                    ">
+                        <label style="
+                            display: block;
+                            margin-bottom: 0.8rem;
+                            color: #000000;
+                            font-weight: 700;
+                            font-size: 1rem;
+                            text-transform: uppercase;
+                            letter-spacing: 1px;
+                        ">EMAIL ADDRESS:</label>
+                        <input type="email" id="player-email" placeholder="Enter your email address" style="
+                            width: 100%;
+                            padding: 1rem 1.2rem;
+                            border: 3px solid #000000;
+                            background: #ffffff;
+                            color: #000000;
+                            font-size: 1.1rem;
+                            font-weight: 500;
+                            font-family: 'Source Code Pro', monospace;
+                            transition: all 0.3s ease;
+                            outline: none;
+                        " />
+                    </div>
+                    
+                    <div id="popup-error" style="
+                        background: #ef4444;
+                        color: #ffffff;
+                        padding: 1rem;
+                        margin-bottom: 1.5rem;
+                        font-weight: 600;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                        display: none;
+                        text-align: center;
+                        border: 2px solid #dc2626;
+                    "></div>
                 </div>
                 
+                <!-- Action Button -->
                 <button id="start-quiz-btn" style="
-                    background: linear-gradient(45deg, #333, #555);
-                    color: white;
-                    border: none;
-                    padding: 15px 30px;
-                    border-radius: 8px;
-                    font-size: 18px;
+                    background: #000000;
+                    color: #ffffff;
+                    border: 3px solid #000000;
+                    padding: 1.2rem 2.5rem;
+                    font-size: 1.2rem;
+                    font-weight: 700;
+                    font-family: 'Source Code Pro', monospace;
+                    text-transform: uppercase;
+                    letter-spacing: 2px;
                     cursor: pointer;
-                    transition: transform 0.2s, box-shadow 0.2s;
-                    font-weight: bold;
-                " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(0,0,0,0.3)'" 
-                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                    Start Quiz 🚀
+                    transition: all 0.3s ease;
+                    width: 100%;
+                    max-width: 300px;
+                " onmouseover="
+                    this.style.background='#ffffff'; 
+                    this.style.color='#000000';
+                    this.style.transform='translateY(-3px)';
+                    this.style.boxShadow='0 6px 20px rgba(0,0,0,0.3)';
+                " onmouseout="
+                    this.style.background='#000000'; 
+                    this.style.color='#ffffff';
+                    this.style.transform='translateY(0)';
+                    this.style.boxShadow='none';
+                ">
+                    START QUIZ
                 </button>
                 
-                <div id="popup-error" style="
-                    color: #dc3545;
-                    margin-top: 15px;
-                    font-size: 14px;
-                    display: none;
-                "></div>
+                <!-- Footer Info -->
+                <div style="
+                    margin-top: 2rem;
+                    padding-top: 1.5rem;
+                    border-top: 2px solid #000000;
+                    color: #000000;
+                    font-size: 0.9rem;
+                    font-weight: 500;
+                ">
+                    <p>10 Questions • Multiple Choice • Medium Difficulty</p>
+                    <p style="margin-top: 0.5rem; color: #666;">
+                        <span style="color: #22c55e;">■</span> Correct Answer
+                        <span style="color: #ef4444; margin-left: 1rem;">■</span> Wrong Answer
+                    </p>
+                </div>
             </div>
         `;
 
-        // Add CSS animations
+        // Enhanced CSS animations
         const style = document.createElement('style');
         style.textContent = `
             @keyframes fadeIn {
@@ -116,32 +380,74 @@ class QuizGame {
                 to { opacity: 1; }
             }
             
-            @keyframes slideIn {
-                from { transform: translateY(-50px); opacity: 0; }
-                to { transform: translateY(0); opacity: 1; }
+            @keyframes slideInScale {
+                0% { 
+                    transform: scale(0.8) translateY(-50px); 
+                    opacity: 0; 
+                }
+                100% { 
+                    transform: scale(1) translateY(0); 
+                    opacity: 1; 
+                }
             }
             
             #player-name:focus, #player-email:focus {
-                border-color: #333 !important;
-                outline: none;
-                box-shadow: 0 0 0 3px rgba(51, 51, 51, 0.1);
+                background: #f8f8f8 !important;
+                box-shadow: 0 0 0 2px #000000 !important;
+                transform: scale(1.02);
+            }
+            
+            @media (max-width: 768px) {
+                .welcome-container {
+                    padding: 2rem 1.5rem !important;
+                    border-width: 3px !important;
+                }
+                
+                .input-group {
+                    margin-bottom: 1.5rem !important;
+                }
+                
+                #start-quiz-btn {
+                    padding: 1rem 2rem !important;
+                    font-size: 1.1rem !important;
+                }
+            }
+            
+            @media (max-width: 480px) {
+                .welcome-container {
+                    padding: 1.5rem 1rem !important;
+                    margin: 1rem;
+                }
+                
+                .welcome-header {
+                    padding-bottom: 1.5rem !important;
+                    margin-bottom: 2rem !important;
+                }
+                
+                .form-section {
+                    margin-bottom: 2rem !important;
+                }
             }
         `;
         document.head.appendChild(style);
 
         document.body.appendChild(popup);
 
-        // Add event listener to start button
+        // Event listeners
         document.getElementById('start-quiz-btn').addEventListener('click', () => {
             this.validateAndStartQuiz();
         });
 
-        // Allow Enter key to submit
         popup.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 this.validateAndStartQuiz();
             }
         });
+
+        // Focus on first input
+        setTimeout(() => {
+            document.getElementById('player-name').focus();
+        }, 500);
     }
 
     validateAndStartQuiz() {
@@ -152,36 +458,62 @@ class QuizGame {
         const name = nameInput.value.trim();
         const email = emailInput.value.trim();
         
-        // Basic validation
+        // Reset error display
+        errorDiv.style.display = 'none';
+        
+        // Validation
         if (!name) {
-            errorDiv.textContent = 'Please enter your name';
-            errorDiv.style.display = 'block';
-            nameInput.focus();
+            this.showError('PLEASE ENTER YOUR FULL NAME', errorDiv, nameInput);
+            return;
+        }
+        
+        if (name.length < 2) {
+            this.showError('NAME MUST BE AT LEAST 2 CHARACTERS', errorDiv, nameInput);
             return;
         }
         
         if (!email) {
-            errorDiv.textContent = 'Please enter your email';
-            errorDiv.style.display = 'block';
-            emailInput.focus();
+            this.showError('PLEASE ENTER YOUR EMAIL ADDRESS', errorDiv, emailInput);
             return;
         }
         
-        // Basic email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            errorDiv.textContent = 'Please enter a valid email address';
-            errorDiv.style.display = 'block';
-            emailInput.focus();
+            this.showError('PLEASE ENTER A VALID EMAIL ADDRESS', errorDiv, emailInput);
             return;
         }
         
         this.playerName = name;
         this.playerEmail = email;
         
-        // Remove popup and show loading
         document.getElementById('welcome-popup').remove();
         this.showLoadingScreen();
+    }
+
+    showError(message, errorDiv, inputElement) {
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+        inputElement.focus();
+        
+        // Add shake animation to the input
+        inputElement.style.animation = 'shake 0.5s ease-in-out';
+        setTimeout(() => {
+            inputElement.style.animation = '';
+        }, 500);
+        
+        // Add shake animation CSS if not exists
+        if (!document.querySelector('#shake-animation')) {
+            const shakeStyle = document.createElement('style');
+            shakeStyle.id = 'shake-animation';
+            shakeStyle.textContent = `
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0); }
+                    25% { transform: translateX(-5px); }
+                    75% { transform: translateX(5px); }
+                }
+            `;
+            document.head.appendChild(shakeStyle);
+        }
     }
 
     showLoadingScreen() {
@@ -191,40 +523,82 @@ class QuizGame {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: white;
+            width: 100vw;
+            height: 100vh;
+            background: #ffffff;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 10000;
         `;
 
         loading.innerHTML = `
-            <div style="text-align: center;">
-                <div class="loading-spinner" style="
-                    width: 60px;
-                    height: 60px;
-                    border: 6px solid #f0f0f0;
-                    border-top: 6px solid #333;
-                    border-radius: 50%;
-                    animation: spin 1s linear infinite;
-                    margin: 0 auto 30px auto;
-                "></div>
-                <h2 style="color: #333; margin-bottom: 15px; font-size: 24px;">Loading Quiz...</h2>
-                <p style="color: #666; font-size: 16px; margin-bottom: 10px;">Welcome, ${this.playerName}! 👋</p>
-                <p style="color: #666; font-size: 14px;">Preparing your personalized quiz experience...</p>
-                <div class="loading-dots" style="
-                    margin-top: 20px;
-                    font-size: 24px;
-                    color: #333;
-                    animation: dots 1.5s infinite;
-                ">●●●</div>
+            <div style="text-align: center; max-width: 90vw;">
+                <!-- Loading Animation -->
+                <div class="loading-container" style="
+                    margin-bottom: 3rem;
+                    position: relative;
+                ">
+                    <div class="loading-spinner" style="
+                        width: 80px;
+                        height: 80px;
+                        border: 6px solid #f0f0f0;
+                        border-top: 6px solid #000000;
+                        border-radius: 50%;
+                        animation: spin 1s linear infinite;
+                        margin: 0 auto;
+                    "></div>
+                </div>
+                
+                <!-- Loading Text -->
+                <div class="loading-text" style="
+                    border: 3px solid #000000;
+                    padding: 2rem;
+                    background: #ffffff;
+                    max-width: 500px;
+                    margin: 0 auto;
+                ">
+                    <h2 style="
+                        color: #000000;
+                        margin-bottom: 1rem;
+                        font-size: clamp(1.8rem, 4vw, 2.5rem);
+                        font-weight: 900;
+                        text-transform: uppercase;
+                        letter-spacing: 2px;
+                    ">PREPARING QUIZ</h2>
+                    
+                    <p style="
+                        color: #000000;
+                        font-size: clamp(1.1rem, 3vw, 1.3rem);
+                        margin-bottom: 1rem;
+                        font-weight: 600;
+                    ">WELCOME, ${this.playerName.toUpperCase()}</p>
+                    
+                    <div class="progress-info" style="
+                        color: #000000;
+                        font-size: 1rem;
+                        font-weight: 500;
+                        line-height: 1.8;
+                    ">
+                        <p>• LOADING QUESTIONS...</p>
+                        <p>• SETTING UP GAME ENGINE...</p>
+                        <p>• OPTIMIZING FOR YOUR DEVICE...</p>
+                        <p style="color: #22c55e;">• GREEN = CORRECT ANSWER</p>
+                        <p style="color: #ef4444;">• RED = WRONG ANSWER</p>
+                    </div>
+                    
+                    <div class="loading-dots" style="
+                        margin-top: 1.5rem;
+                        font-size: 2rem;
+                        color: #000000;
+                        font-weight: 900;
+                        animation: dots 1.5s infinite;
+                    ">●●●</div>
+                </div>
             </div>
         `;
 
-        // Add loading animations
         const loadingStyle = document.createElement('style');
         loadingStyle.textContent = `
             @keyframes spin {
@@ -233,30 +607,39 @@ class QuizGame {
             }
             
             @keyframes dots {
-                0%, 20% { opacity: 0; }
-                50% { opacity: 1; }
-                80%, 100% { opacity: 0; }
+                0%, 33% { opacity: 1; }
+                34%, 66% { opacity: 0.3; }
+                67%, 100% { opacity: 1; }
+            }
+            
+            @media (max-width: 768px) {
+                .loading-text {
+                    padding: 1.5rem 1rem !important;
+                    margin: 0 1rem !important;
+                }
+                
+                .loading-container {
+                    margin-bottom: 2rem !important;
+                }
             }
         `;
         document.head.appendChild(loadingStyle);
 
         document.body.appendChild(loading);
 
-        // Initialize quiz after loading animation
         setTimeout(() => {
             loading.remove();
             this.init();
-        }, 3000);
+        }, 3500);
     }
 
     createNextButton() {
         const nextBtn = document.createElement('button');
         nextBtn.id = 'next-btn';
         nextBtn.className = 'btn next-btn';
-        nextBtn.textContent = 'Next Question';
+        nextBtn.textContent = 'NEXT QUESTION';
         nextBtn.style.display = 'none';
         
-        // Add it after the answer buttons
         this.answerButtonsEl.parentNode.appendChild(nextBtn);
         return nextBtn;
     }
@@ -264,9 +647,31 @@ class QuizGame {
     createScoreDisplay() {
         const scoreDiv = document.createElement('div');
         scoreDiv.innerHTML = `
-            <div style="position: fixed; top: 20px; right: 20px; background: white; padding: 15px; border: 2px solid #333; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.1);">
-                <div style="font-weight: bold; color: #333; margin-bottom: 5px;">Score: <span id="score">0</span>/<span id="total">0</span></div>
-                <div style="color: #666;">Question: <span id="current-q">1</span>/<span id="total-q">0</span></div>
+            <div style="
+                position: fixed; 
+                top: 2rem; 
+                right: 2rem; 
+                background: #ffffff; 
+                border: 3px solid #000000; 
+                padding: 1.5rem;
+                font-family: 'Source Code Pro', monospace;
+                z-index: 1000;
+                min-width: 200px;
+            ">
+                <div style="
+                    font-weight: 900; 
+                    color: #000000; 
+                    margin-bottom: 0.5rem;
+                    font-size: 1.1rem;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                ">SCORE: <span id="score">0</span>/<span id="total">0</span></div>
+                <div style="
+                    color: #000000;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                ">QUESTION: <span id="current-q">1</span>/<span id="total-q">0</span></div>
             </div>
         `;
         document.body.appendChild(scoreDiv);
@@ -278,7 +683,8 @@ class QuizGame {
     }
 
     async init() {
-        console.log("🚀 Initializing QuizGame...");
+        this.startTime = new Date();
+        console.log("Initializing QuizGame...");
         await this.fetchQuestions();
         
         if (this.questions.length > 0) {
@@ -294,7 +700,7 @@ class QuizGame {
     }
 
     async fetchQuestions() {
-        console.log("📡 Fetching questions from API...");
+        console.log("Fetching questions from API...");
         
         try {
             const response = await fetch("https://opentdb.com/api.php?amount=10&category=9&difficulty=medium&type=multiple");
@@ -304,7 +710,7 @@ class QuizGame {
             }
             
             const data = await response.json();
-            console.log("✅ API Response:", data);
+            console.log("API Response:", data);
             
             if (data.response_code !== 0) {
                 throw new Error(`API Error Code: ${data.response_code}`);
@@ -314,7 +720,6 @@ class QuizGame {
                 throw new Error("No questions received from API");
             }
             
-            // Process questions properly
             this.questions = data.results.map(q => ({
                 question: this.decodeHTML(q.question),
                 correct: this.decodeHTML(q.correct_answer),
@@ -325,10 +730,10 @@ class QuizGame {
                 ])
             }));
             
-            console.log(`✅ Successfully processed ${this.questions.length} questions`);
+            console.log(`Successfully processed ${this.questions.length} questions`);
             
         } catch (error) {
-            console.error("❌ Error fetching questions:", error);
+            console.error("Error fetching questions:", error);
             this.questions = [];
             
             if (this.questionEl) {
@@ -360,83 +765,110 @@ class QuizGame {
 
         const currentQuestion = this.questions[this.currentQuestionIndex];
         
-        // Update question text
         this.questionEl.textContent = `${this.currentQuestionIndex + 1}. ${currentQuestion.question}`;
         
-        // Update current question number
         if (this.currentQuestionEl) {
             this.currentQuestionEl.textContent = this.currentQuestionIndex + 1;
         }
 
-        // Clear previous answers
         this.answerButtonsEl.innerHTML = '';
         this.selectedAnswer = null;
         this.isAnswered = false;
         
-        // Hide next button
         if (this.nextBtn) {
             this.nextBtn.style.display = 'none';
+            this.nextBtn.classList.remove('show');
         }
 
-        // Create answer buttons
-        currentQuestion.allAnswers.forEach(answer => {
+        // Remove answered class from question container
+        if (this.questionContainerEl) {
+            this.questionContainerEl.classList.remove('answered');
+        }
+
+        currentQuestion.allAnswers.forEach((answer, index) => {
             const button = document.createElement('button');
             button.textContent = answer;
             button.className = 'btn btn-answer';
-            button.addEventListener('click', () =>
-                this.selectAnswer(button, answer)
-            );
+            button.style.animationDelay = `${index * 0.1}s`;
+            button.addEventListener('click', () => this.selectAnswer(button, answer));
             this.answerButtonsEl.appendChild(button);
         });
         
-        console.log(`📝 Showing question ${this.currentQuestionIndex + 1}:`, currentQuestion.question);
+        console.log(`Showing question ${this.currentQuestionIndex + 1}:`, currentQuestion.question);
     }
 
     selectAnswer(button, answer) {
         if (this.isAnswered) return;
 
+        // Add selected class immediately
+        button.classList.add('selected');
+        
         this.selectedAnswer = answer;
         this.isAnswered = true;
 
         const currentQuestion = this.questions[this.currentQuestionIndex];
         const isCorrect = answer === currentQuestion.correct;
 
+        // Short delay before revealing answer for better UX
+        setTimeout(() => {
+            this.revealAnswer(button, answer, currentQuestion, isCorrect);
+        }, 800);
+    }
+
+    revealAnswer(selectedButton, selectedAnswer, currentQuestion, isCorrect) {
+        // Remove selected class
+        selectedButton.classList.remove('selected');
+        
         if (isCorrect) {
             this.score++;
             if (this.scoreEl) {
                 this.scoreEl.textContent = this.score;
+                this.scoreEl.classList.add('score-highlight');
+                setTimeout(() => {
+                    this.scoreEl.classList.remove('score-highlight');
+                }, 600);
             }
-            button.style.backgroundColor = '#28a745';
-            button.style.color = 'white';
-            console.log("✅ Correct answer!");
+            
+            selectedButton.classList.add('correct');
+            console.log("Correct answer!");
         } else {
-            button.style.backgroundColor = '#dc3545';
-            button.style.color = 'white';
+            selectedButton.classList.add('incorrect');
             
             // Highlight correct answer
             Array.from(this.answerButtonsEl.children).forEach(btn => {
                 if (btn.textContent === currentQuestion.correct) {
-                    btn.style.backgroundColor = '#28a745';
-                    btn.style.color = 'white';
+                    btn.classList.add('correct');
                 }
             });
-            console.log("❌ Incorrect answer. Correct was:", currentQuestion.correct);
+            console.log("Incorrect answer. Correct was:", currentQuestion.correct);
         }
 
-        // Disable all buttons
+        // Disable all buttons with enhanced visual feedback
         Array.from(this.answerButtonsEl.children).forEach(btn => {
             btn.disabled = true;
+            if (!btn.classList.contains('correct') && !btn.classList.contains('incorrect')) {
+                btn.style.opacity = '0.6';
+                btn.style.transform = 'scale(0.98)';
+            }
         });
 
-        // Show next button or finish
-        if (this.nextBtn) {
-            if (this.currentQuestionIndex < this.questions.length - 1) {
-                this.nextBtn.textContent = 'Next Question';
-            } else {
-                this.nextBtn.textContent = 'Show Results';
-            }
-            this.nextBtn.style.display = 'block';
+        // Add answered class to question container
+        if (this.questionContainerEl) {
+            this.questionContainerEl.classList.add('answered');
         }
+
+        // Show next button with enhanced animation
+        setTimeout(() => {
+            if (this.nextBtn) {
+                if (this.currentQuestionIndex < this.questions.length - 1) {
+                    this.nextBtn.textContent = 'NEXT QUESTION';
+                } else {
+                    this.nextBtn.textContent = 'SHOW RESULTS';
+                }
+                this.nextBtn.style.display = 'block';
+                this.nextBtn.classList.add('show');
+            }
+        }, 1000);
     }
 
     nextQuestion() {
@@ -445,175 +877,478 @@ class QuizGame {
     }
 
     showGameOver() {
-        // Hide the score display
-        const scoreDisplay = document.querySelector('[style*="position: fixed; top: 20px; right: 20px"]');
+        this.endTime = new Date();
+        const scoreDisplay = document.querySelector('[style*="position: fixed; top: 2rem; right: 2rem"]');
         if (scoreDisplay) {
             scoreDisplay.style.display = 'none';
         }
 
         this.createEnhancedGameOverScreen();
         const percentage = Math.round((this.score / this.questions.length) * 100);
-        console.log(`🎯 Quiz completed! Score: ${this.score}/${this.questions.length} (${percentage}%)`);
+        console.log(`Quiz completed! Score: ${this.score}/${this.questions.length} (${percentage}%)`);
+    }
+
+    getTimeTaken() {
+        if (this.startTime && this.endTime) {
+            const timeDiff = Math.floor((this.endTime - this.startTime) / 1000);
+            const minutes = Math.floor(timeDiff / 60);
+            const seconds = timeDiff % 60;
+            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        return '00:00';
+    }
+
+    saveToLeaderboard() {
+        const playerData = {
+            id: Date.now() + Math.random(),
+            name: this.playerName,
+            email: this.playerEmail,
+            score: this.score,
+            totalQuestions: this.questions.length,
+            percentage: Math.round((this.score / this.questions.length) * 100),
+            timeTaken: this.getTimeTaken(),
+            date: new Date().toISOString(),
+            timestamp: Date.now(),
+            rank: this.getRank(Math.round((this.score / this.questions.length) * 100))
+        };
+
+        // Get existing leaderboard data (try both storage keys for compatibility)
+        let leaderboard = [];
+        try {
+            let existing = localStorage.getItem('quizLeaderboard');
+            if (!existing) {
+                existing = localStorage.getItem('quizely-leaderboard');
+            }
+            if (existing) {
+                leaderboard = JSON.parse(existing);
+            }
+        } catch (error) {
+            console.error('Error loading leaderboard:', error);
+        }
+
+        // Add new score
+        leaderboard.push(playerData);
+
+        // Sort by percentage (desc), then by time taken (asc) for same percentage
+        leaderboard.sort((a, b) => {
+            if (b.percentage !== a.percentage) {
+                return b.percentage - a.percentage;
+            }
+            
+            // Handle time comparison (both string MM:SS and seconds formats)
+            const timeA = this.parseTimeToSeconds(a.timeTaken);
+            const timeB = this.parseTimeToSeconds(b.timeTaken);
+            return timeA - timeB;
+        });
+
+        // Keep only top 100 scores
+        leaderboard = leaderboard.slice(0, 100);
+
+        // Save to both storage keys for maximum compatibility
+        try {
+            localStorage.setItem('quizLeaderboard', JSON.stringify(leaderboard));
+            localStorage.setItem('quizely-leaderboard', JSON.stringify(leaderboard));
+            console.log('Score saved to leaderboard!');
+        } catch (error) {
+            console.error('Error saving to leaderboard:', error);
+        }
+
+        return playerData;
+    }
+
+    parseTimeToSeconds(timeStr) {
+        if (typeof timeStr === 'number') {
+            return timeStr;
+        }
+        if (typeof timeStr === 'string' && timeStr.includes(':')) {
+            const [minutes, seconds] = timeStr.split(':').map(Number);
+            return (minutes * 60) + seconds;
+        }
+        return parseInt(timeStr) || 0;
+    }
+
+    getRank(percentage) {
+        if (percentage >= 90) return "GRANDMASTER";
+        if (percentage >= 80) return "MASTER";
+        if (percentage >= 70) return "ELITE";
+        if (percentage >= 60) return "APPRENTICE";
+        return "NOVICE";
     }
 
     createEnhancedGameOverScreen() {
         const percentage = Math.round((this.score / this.questions.length) * 100);
+        const timeTaken = this.getTimeTaken();
         
         let message = '';
-        let emoji = '';
-        if (percentage >= 80) {
-            message = "Outstanding Performance!";
-            emoji = "🏆";
+        let messageColor = '#000000';
+        let rank = '';
+        
+        if (percentage >= 90) {
+            message = "OUTSTANDING PERFORMANCE";
+            rank = "GRANDMASTER";
+            messageColor = '#22c55e';
+        } else if (percentage >= 80) {
+            message = "EXCELLENT WORK";
+            rank = "MASTER";
+            messageColor = '#3b82f6';
+        } else if (percentage >= 70) {
+            message = "WELL DONE";
+            rank = "ELITE";
+            messageColor = '#f59e0b';
         } else if (percentage >= 60) {
-            message = 'Well Done!';
-            emoji = "👏";
-        } else if (percentage >= 40) {
-            message = 'Good Effort!';
-            emoji = "📚";
+            message = "GOOD EFFORT";
+            rank = "APPRENTICE";
+            messageColor = '#8b5cf6';
         } else {
-            message = "Keep Practicing!";
-            emoji = "💪";
+            message = "KEEP PRACTICING";
+            rank = "NOVICE";
+            messageColor = '#ef4444';
         }
+
+        // Save to leaderboard
+        const playerData = this.saveToLeaderboard();
 
         const gameOverDiv = document.createElement('div');
         gameOverDiv.style.cssText = `
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: white;
+            width: 100vw;
+            height: 100vh;
+            background: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 10000;
             animation: fadeIn 0.8s ease-in;
+            overflow-y: auto;
+            padding: 2rem 1rem;
         `;
 
         gameOverDiv.innerHTML = `
-            <div style="
-                background: white;
-                border: 3px solid #000;
-                padding: 60px 40px;
+            <div class="results-container" style="
+                background: #ffffff;
+                border: 4px solid #000000;
+                padding: 3rem 2rem;
                 text-align: center;
-                max-width: 500px;
-                width: 90%;
-                box-shadow: 0 0 0 10px white, 0 0 0 13px #000;
+                max-width: 700px;
+                width: 100%;
                 position: relative;
                 animation: slideInScale 0.8s ease-out;
+                margin: auto;
             ">
-                <!-- Decorative corners -->
-                <div style="position: absolute; top: 10px; left: 10px; width: 20px; height: 20px; border-left: 3px solid #000; border-top: 3px solid #000;"></div>
-                <div style="position: absolute; top: 10px; right: 10px; width: 20px; height: 20px; border-right: 3px solid #000; border-top: 3px solid #000;"></div>
-                <div style="position: absolute; bottom: 10px; left: 10px; width: 20px; height: 20px; border-left: 3px solid #000; border-bottom: 3px solid #000;"></div>
-                <div style="position: absolute; bottom: 10px; right: 10px; width: 20px; height: 20px; border-right: 3px solid #000; border-bottom: 3px solid #000;"></div>
-                
-                <div style="font-size: 48px; margin-bottom: 20px; animation: bounce 2s infinite;">${emoji}</div>
-                <h1 style="color: #000; margin-bottom: 10px; font-size: 32px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px;">QUIZ COMPLETE</h1>
-                <h2 style="color: #000; margin-bottom: 30px; font-size: 24px; font-weight: normal;">${message}</h2>
-                
-                <!-- Player Info -->
-                <div style="background: #f8f8f8; border: 2px solid #000; padding: 20px; margin-bottom: 30px; text-align: left;">
-                    <div style="font-weight: bold; color: #000; margin-bottom: 5px;">Player: ${this.playerName}</div>
-                    <div style="color: #666; font-size: 14px;">${this.playerEmail}</div>
-                </div>
-                
-                <!-- Score Display -->
-                <div style="margin-bottom: 30px;">
-                    <div style="font-size: 48px; font-weight: bold; color: #000; margin-bottom: 10px;">
-                        ${this.score}/${this.questions.length}
-                    </div>
-                    <div style="font-size: 24px; color: #000; font-weight: bold; background: ${percentage >= 80 ? '#000' : percentage >= 60 ? '#333' : '#666'}; color: white; padding: 10px 20px; display: inline-block;">
-                        ${percentage}% CORRECT
-                    </div>
-                </div>
-                
-                <!-- Performance Breakdown -->
-                <div style="background: #f8f8f8; border: 2px solid #000; padding: 20px; margin-bottom: 30px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="font-weight: bold; color: #000;">Correct Answers:</span>
-                        <span style="color: #000;">${this.score}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="font-weight: bold; color: #000;">Wrong Answers:</span>
-                        <span style="color: #000;">${this.questions.length - this.score}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="font-weight: bold; color: #000;">Total Questions:</span>
-                        <span style="color: #000;">${this.questions.length}</span>
-                    </div>
-                </div>
-                
-                <!-- Progress Bar -->
-                <div style="width: 100%; height: 20px; border: 2px solid #000; margin-bottom: 30px; overflow: hidden;">
+                <!-- Header Section -->
+                <div class="results-header" style="
+                    border-bottom: 3px solid #000000;
+                    padding-bottom: 2rem;
+                    margin-bottom: 2rem;
+                ">
+                    <h1 style="
+                        color: #000000;
+                        margin-bottom: 1rem;
+                        font-size: clamp(2rem, 6vw, 3.5rem);
+                        font-weight: 900;
+                        text-transform: uppercase;
+                        letter-spacing: 3px;
+                        line-height: 1.1;
+                    ">QUIZ COMPLETE</h1>
+                    
                     <div style="
-                        height: 100%;
-                        width: ${percentage}%;
-                        background: #000;
-                        transition: width 1.5s ease-in-out;
-                        animation: fillBar 1.5s ease-in-out;
-                    "></div>
+                        background: ${messageColor};
+                        color: #ffffff;
+                        padding: 1rem 2rem;
+                        font-size: clamp(1.2rem, 4vw, 1.8rem);
+                        font-weight: 700;
+                        text-transform: uppercase;
+                        letter-spacing: 2px;
+                        margin: 0 auto;
+                        max-width: 400px;
+                        border: 3px solid ${messageColor};
+                    ">${message}</div>
                 </div>
                 
-                <button onclick="location.reload()" style="
-                    background: #000;
-                    color: white;
-                    border: 3px solid #000;
-                    padding: 15px 40px;
-                    font-size: 18px;
-                    font-weight: bold;
-                    cursor: pointer;
-                    text-transform: uppercase;
-                    letter-spacing: 1px;
-                    transition: all 0.3s;
-                " onmouseover="this.style.background='white'; this.style.color='#000';" 
-                   onmouseout="this.style.background='#000'; this.style.color='white';">
-                    Play Again
-                </button>
+                <!-- Player Info Section -->
+                <div class="player-info" style="
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 1rem;
+                    margin-bottom: 2rem;
+                    text-align: left;
+                ">
+                    <div style="
+                        border: 2px solid #000000;
+                        padding: 1.5rem;
+                        background: #ffffff;
+                    ">
+                        <h3 style="
+                            color: #000000;
+                            font-size: 0.9rem;
+                            font-weight: 700;
+                            text-transform: uppercase;
+                            letter-spacing: 1px;
+                            margin-bottom: 0.5rem;
+                        ">PLAYER</h3>
+                        <p style="
+                            color: #000000;
+                            font-size: 1.1rem;
+                            font-weight: 600;
+                            word-break: break-word;
+                        ">${this.playerName}</p>
+                    </div>
+                    
+                    <div style="
+                        border: 2px solid #000000;
+                        padding: 1.5rem;
+                        background: linear-gradient(135deg, ${messageColor}22, #ffffff);
+                        border-color: ${messageColor};
+                    ">
+                        <h3 style="
+                            color: #000000;
+                            font-size: 0.9rem;
+                            font-weight: 700;
+                            text-transform: uppercase;
+                            letter-spacing: 1px;
+                            margin-bottom: 0.5rem;
+                        ">RANK</h3>
+                        <p style="
+                            color: ${messageColor};
+                            font-size: 1.1rem;
+                            font-weight: 900;
+                            text-transform: uppercase;
+                            letter-spacing: 1px;
+                        ">${rank}</p>
+                    </div>
+                </div>
+                
+                <!-- Main Score Section -->
+                <div class="score-display" style="
+                    background: linear-gradient(135deg, #000000, #333333);
+                    color: #ffffff;
+                    padding: 2rem;
+                    margin-bottom: 2rem;
+                    text-align: center;
+                    border: 3px solid #000000;
+                ">
+                    <div style="
+                        font-size: clamp(3rem, 8vw, 5rem);
+                        font-weight: 900;
+                        margin-bottom: 0.5rem;
+                        line-height: 1;
+                    ">${this.score}/${this.questions.length}</div>
+                    
+                    <div style="
+                        font-size: clamp(1.5rem, 5vw, 2.5rem);
+                        font-weight: 900;
+                        text-transform: uppercase;
+                        letter-spacing: 2px;
+                        margin-bottom: 1rem;
+                        color: ${percentage >= 80 ? '#22c55e' : percentage >= 60 ? '#f59e0b' : '#ef4444'};
+                    ">${percentage}% CORRECT</div>
+                    
+                    <div style="
+                        font-size: 1.2rem;
+                        font-weight: 600;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                    ">TIME: ${timeTaken}</div>
+                </div>
+                
+                <!-- Enhanced Stats Section -->
+                <div class="stats-section" style="
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                    gap: 1rem;
+                    margin-bottom: 2rem;
+                ">
+                    <div style="
+                        border: 2px solid #22c55e;
+                        padding: 1rem;
+                        text-align: center;
+                        background: linear-gradient(135deg, #22c55e22, #ffffff);
+                    ">
+                        <div style="
+                            font-size: 2rem;
+                            font-weight: 900;
+                            color: #22c55e;
+                            margin-bottom: 0.5rem;
+                        ">${this.score}</div>
+                        <div style="
+                            font-size: 0.8rem;
+                            font-weight: 600;
+                            text-transform: uppercase;
+                            letter-spacing: 1px;
+                            color: #000000;
+                        ">CORRECT</div>
+                    </div>
+                    
+                    <div style="
+                        border: 2px solid #ef4444;
+                        padding: 1rem;
+                        text-align: center;
+                        background: linear-gradient(135deg, #ef444422, #ffffff);
+                    ">
+                        <div style="
+                            font-size: 2rem;
+                            font-weight: 900;
+                            color: #ef4444;
+                            margin-bottom: 0.5rem;
+                        ">${this.questions.length - this.score}</div>
+                        <div style="
+                            font-size: 0.8rem;
+                            font-weight: 600;
+                            text-transform: uppercase;
+                            letter-spacing: 1px;
+                            color: #000000;
+                        ">INCORRECT</div>
+                    </div>
+                    
+                    <div style="
+                        border: 2px solid #3b82f6;
+                        padding: 1rem;
+                        text-align: center;
+                        background: linear-gradient(135deg, #3b82f622, #ffffff);
+                    ">
+                        <div style="
+                            font-size: 2rem;
+                            font-weight: 900;
+                            color: #3b82f6;
+                            margin-bottom: 0.5rem;
+                        ">${timeTaken}</div>
+                        <div style="
+                            font-size: 0.8rem;
+                            font-weight: 600;
+                            text-transform: uppercase;
+                            letter-spacing: 1px;
+                            color: #000000;
+                        ">DURATION</div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="action-buttons" style="
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 1rem;
+                    margin-bottom: 2rem;
+                ">
+                    <button id="play-again-btn" style="
+                        background: #ffffff;
+                        color: #000000;
+                        border: 3px solid #000000;
+                        padding: 1.2rem 2rem;
+                        font-size: 1.1rem;
+                        font-weight: 700;
+                        font-family: 'Source Code Pro', monospace;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                    " onmouseover="
+                        this.style.background='#000000';
+                        this.style.color='#ffffff';
+                        this.style.transform='translateY(-2px)';
+                    " onmouseout="
+                        this.style.background='#ffffff';
+                        this.style.color='#000000';
+                        this.style.transform='translateY(0)';
+                    ">
+                        PLAY AGAIN
+                    </button>
+                    
+                    <button id="view-leaderboard-btn" style="
+                        background: #000000;
+                        color: #ffffff;
+                        border: 3px solid #000000;
+                        padding: 1.2rem 2rem;
+                        font-size: 1.1rem;
+                        font-weight: 700;
+                        font-family: 'Source Code Pro', monospace;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                    " onmouseover="
+                        this.style.background='#ffffff';
+                        this.style.color='#000000';
+                        this.style.transform='translateY(-2px)';
+                    " onmouseout="
+                        this.style.background='#000000';
+                        this.style.color='#ffffff';
+                        this.style.transform='translateY(0)';
+                    ">
+                        LEADERBOARD
+                    </button>
+                </div>
+                
+                <!-- Footer -->
+                <div style="
+                    border-top: 2px solid #000000;
+                    padding-top: 1.5rem;
+                    color: #000000;
+                    font-size: 0.9rem;
+                    font-weight: 500;
+                ">
+                    <p style="margin-bottom: 0.5rem;">
+                        <span style="color: #22c55e; font-weight: 700;">✓</span> Score saved to leaderboard!
+                    </p>
+                    <p>Thank you for playing Quiz Challenge</p>
+                    <p style="margin-top: 0.5rem; font-size: 0.8rem; color: #666;">
+                        <span style="color: #22c55e;">■</span> Correct answers were shown in green
+                        <span style="color: #ef4444; margin-left: 1rem;">■</span> Wrong answers in red
+                    </p>
+                </div>
             </div>
         `;
 
-        // Add enhanced animations
-        const enhancedStyle = document.createElement('style');
-        enhancedStyle.textContent = `
-            @keyframes slideInScale {
-                from { 
-                    transform: scale(0.5) translateY(-100px); 
-                    opacity: 0; 
+        document.body.appendChild(gameOverDiv);
+
+        // Add event listeners for action buttons
+        document.getElementById('play-again-btn').addEventListener('click', () => {
+            location.reload();
+        });
+
+        document.getElementById('view-leaderboard-btn').addEventListener('click', () => {
+            // Store current player data for highlighting in leaderboard
+            localStorage.setItem('current-player', JSON.stringify({
+                name: this.playerName,
+                timestamp: this.endTime.getTime()
+            }));
+            window.open('leaderbord.html', '_blank');
+        });
+
+        // Add responsive styles for mobile
+        const responsiveStyle = document.createElement('style');
+        responsiveStyle.textContent = `
+            @media (max-width: 768px) {
+                .results-container {
+                    padding: 2rem 1rem !important;
                 }
-                to { 
-                    transform: scale(1) translateY(0); 
-                    opacity: 1; 
+                
+                .player-info, .action-buttons {
+                    grid-template-columns: 1fr !important;
+                }
+                
+                .stats-section {
+                    grid-template-columns: 1fr 1fr !important;
                 }
             }
             
-            @keyframes bounce {
-                0%, 20%, 50%, 80%, 100% {
-                    transform: translateY(0);
+            @media (max-width: 480px) {
+                .stats-section {
+                    grid-template-columns: 1fr !important;
                 }
-                40% {
-                    transform: translateY(-20px);
+                
+                .results-container {
+                    padding: 1.5rem 1rem !important;
+                    margin: 1rem;
                 }
-                60% {
-                    transform: translateY(-10px);
-                }
-            }
-            
-            @keyframes fillBar {
-                from { width: 0%; }
-                to { width: ${percentage}%; }
             }
         `;
-        document.head.appendChild(enhancedStyle);
-
-        // Replace the entire page content
-        document.body.innerHTML = '';
-        document.body.appendChild(gameOverDiv);
+        document.head.appendChild(responsiveStyle);
     }
 }
 
-// Initialize the game when page loads
-window.addEventListener('load', () => {
-    console.log("🎮 Starting QuizGame...");
+// Initialize the game when the page loads
+document.addEventListener('DOMContentLoaded', () => {
     new QuizGame();
 });
