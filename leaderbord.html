@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet" />
+    <title>Quizely - Leaderboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Source Code Pro", monospace;
+            background-color: #ffffff;
+            color: #000000;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            border-bottom: 3px solid #000000;
+            padding-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: -1px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: #666666;
+        }
+
+        /* Stats Section */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background-color: #ffffff;
+            border: 2px solid #000000;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #000000;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: #666666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Controls Section */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border: 2px solid #000000;
+            background-color: #f9f9f9;
+        }
+
+        .control-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .control-label {
+            font-weight: 600;
+            margin-right: 0.5rem;
+            color: #000000;
+        }
+
+        .control-btn {
+            font-family: "Source Code Pro", monospace;
+            padding: 0.5rem 1rem;
+            border: 2px solid #000000;
+            background-color: #ffffff;
+            color: #000000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .control-btn:hover {
+            background-color: #000000;
+            color: #ffffff;
+        }
+
+        .control-btn.active {
+            background-color: #000000;
+            color: #ffffff;
+        }
+
+        .search-input {
+            font-family: "Source Code Pro", monospace;
+            padding: 0.75rem;
+            border: 2px solid #000000;
+            background-color: #ffffff;
+            color: #000000;
+            font-size: 1rem;
+            min-width: 200px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0,0,0,0.1);
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn, .sort-btn, .filter-btn {
+            font-family: "Source Code Pro", monospace;
+            padding: 0.75rem 1.5rem;
+            border: 2px solid #000000;
+            background-color: #ffffff;
+            color: #000000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .action-btn:hover, .sort-btn:hover, .filter-btn:hover {
+            background-color: #000000;
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+
+        .action-btn.active, .sort-btn.active, .filter-btn.active {
+            background-color: #000000;
+            color: #ffffff;
+        }
+
+        .action-btn.danger {
+            border-color: #cc0000;
+            color: #cc0000;
+        }
+
+        .action-btn.danger:hover {
+            background-color: #cc0000;
+            color: #ffffff;
+        }
+
+        /* Leaderboard Table */
+        .table-container {
+            background-color: #ffffff;
+            border: 3px solid #000000;
+            overflow-x: auto;
+            margin-bottom: 2rem;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #ffffff;
+        }
+
+        .leaderboard-table th,
+        .leaderboard-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #000000;
+        }
+
+        .leaderboard-table th {
+            background-color: #000000;
+            color: #ffffff;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .leaderboard-table tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .leaderboard-table tr.current-player {
+            background-color: #e8e8e8 !important;
+            font-weight: 600;
+        }
+
+        .leaderboard-table tr.top-player {
+            background-color: #f9f9f9;
+        }
+
+        .rank {
+            text-align: center;
+            font-weight: 700;
+            min-width: 80px;
+        }
+
+        .rank-icon {
+            font-size: 1.2rem;
+        }
+
+        .name {
+            font-weight: 600;
+            max-width: 200px;
+            word-wrap: break-word;
+        }
+
+        .you-badge {
+            background-color: #000000;
+            color: #ffffff;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.7rem;
+            margin-left: 0.5rem;
+            font-weight: 600;
+        }
+
+        .score {
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .percentage {
+            min-width: 120px;
+        }
+
+        .percentage-bar {
+            position: relative;
+            width: 100%;
+            height: 25px;
+            background-color: #f0f0f0;
+            border: 1px solid #000000;
+            overflow: hidden;
+        }
+
+        .percentage-fill {
+            height: 100%;
+            background-color: #000000;
+            transition: width 0.8s ease-in-out;
+        }
+
+        .percentage-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #000000;
+            font-weight: 600;
+            font-size: 0.9rem;
+            z-index: 5;
+        }
+
+        .time {
+            text-align: center;
+            font-family: monospace;
+        }
+
+        .date {
+            text-align: center;
+        }
+
+        .actions {
+            text-align: center;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 3rem;
+            color: #666666;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background-color: #ffffff;
+            color: #000000;
+            padding: 2rem;
+            border: 3px solid #000000;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .detail-value {
+            color: #000;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #000;
+        }
+
+        /* Back to Game Button */
+        .back-button {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            font-family: "Source Code Pro", monospace;
+            padding: 1rem 1.5rem;
+            background-color: #000000;
+            color: #ffffff;
+            border: 2px solid #000000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-transform: uppercase;
+            z-index: 100;
+        }
+
+        .back-button:hover {
+            background-color: #ffffff;
+            color: #000000;
+            transform: translateY(-2px);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .control-group {
+                justify-content: center;
+                margin-bottom: 1rem;
+            }
+
+            .action-buttons {
+                justify-content: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .back-button {
+                position: static;
+                margin-bottom: 2rem;
+                width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .controls {
+                padding: 1rem;
+            }
+
+            .leaderboard-table th,
+            .leaderboard-table td {
+                padding: 0.5rem;
+                font-size: 0.9rem;
+            }
+
+            .search-input {
+                width: 100%;
+            }
+
+            .modal {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .stat-value {
+                font-size: 2rem;
+            }
+
+            .control-btn, .action-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+
+            .leaderboard-table {
+                font-size: 0.8rem;
+            }
+
+            .name {
+                max-width: 120px;
+            }
+
+            .you-badge {
+                display: block;
+                margin: 0.2rem 0;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="backToGame()">← BACK TO GAME</button>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header fade-in">
+            <h1>LEADERBOARD</h1>
+            <p>Top performers and quiz statistics</p>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card slide-in" style="animation-delay: 0.1s;">
+                <div class="stat-value" id="total-players">0</div>
+                <div class="stat-label">Total Players</div>
+            </div>
+            <div class="stat-card slide-in" style="animation-delay: 0.2s;">
+                <div class="stat-value" id="total-games">0</div>
+                <div class="stat-label">Total Games</div>
+            </div>
+            <div class="stat-card slide-in" style="animation-delay: 0.3s;">
+                <div class="stat-value" id="avg-score">0%</div>
+                <div class="stat-label">Average Score</div>
+            </div>
+            <div class="stat-card slide-in" style="animation-delay: 0.4s;">
+                <div class="stat-value" id="top-score">0%</div>
+                <div class="stat-label">Best Score</div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls fade-in">
+            <div class="control-group">
+                <span class="control-label">SORT BY:</span>
+                <button class="control-btn sort-btn active" id="sort-score">SCORE</button>
+                <button class="control-btn sort-btn" id="sort-percentage">PERCENTAGE</button>
+                <button class="control-btn sort-btn" id="sort-time">TIME</button>
+                <button class="control-btn sort-btn" id="sort-date">DATE</button>
+            </div>
+
+            <div class="control-group">
+                <span class="control-label">FILTER:</span>
+                <button class="control-btn filter-btn active" id="filter-all">ALL TIME</button>
+                <button class="control-btn filter-btn" id="filter-today">TODAY</button>
+                <button class="control-btn filter-btn" id="filter-week">THIS WEEK</button>
+            </div>
+
+            <div class="control-group">
+                <input type="text" class="search-input" id="search-input" placeholder="Search players...">
+            </div>
+
+            <div class="action-buttons">
+                <button class="action-btn" id="export-data">EXPORT CSV</button>
+                <button class="action-btn danger" id="clear-data">CLEAR DATA</button>
+            </div>
+        </div>
+
+        <!-- Leaderboard Table -->
+        <div class="table-container slide-in">
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th class="rank">RANK</th>
+                        <th class="name">PLAYER NAME</th>
+                        <th class="score">SCORE</th>
+                        <th class="percentage">PERCENTAGE</th>
+                        <th class="time">TIME</th>
+                        <th class="date">DATE</th>
+                        <th class="actions">ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-body">
+                    <tr>
+                        <td colspan="7" class="no-data">
+                            <div>
+                                <h3>Loading...</h3>
+                                <p>Please wait while we load the leaderboard data.</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal-overlay" id="detail-modal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <h3>Player Details</h3>
+            
+            <div class="detail-item">
+                <span class="detail-label">Name:</span>
+                <span class="detail-value" id="detail-name">-</span>
+            </div>
+            
+            <div class="detail-item">
+                <span class="detail-label">Email:</span>
+                <span class="detail-value" id="detail-email">-</span>
+            </div>
+            
+            <div class="detail-item">
+                <span class="detail-label">Score:</span>
+                <span class="detail-value" id="detail-score">-</span>
+            </div>
+            
+            <div class="detail-item">
+                <span class="detail-label">Percentage:</span>
+                <span class="detail-value" id="detail-percentage">-</span>
+            </div>
+            
+            <div class="detail-item">
+                <span class="detail-label">Time Taken:</span>
+                <span class="detail-value" id="detail-time">-</span>
+            </div>
+            
+            <div class="detail-item">
+                <span class="detail-label">Date Played:</span>
+                <span class="detail-value" id="detail-date">-</span>
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <button class="action-btn" onclick="closeModal()">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="leaderbord.js"></script>
+</body>
+</html>

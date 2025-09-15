@@ -1,0 +1,271 @@
+ * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Source Code Pro", monospace;
+            background-color: #ffffff;
+            color: #000000;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 90%;
+            margin: 0 auto;
+            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #homepage {
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            color: #000000;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            position: relative;
+        }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background-color: #000000;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #666666;
+            margin-bottom: 3rem;
+            font-weight: 400;
+        }
+
+        .question-container {
+            background-color: #ffffff;
+            border: 2px solid #000000;
+            border-radius: 8px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #question {
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            color: #000000;
+            margin-bottom: 2rem;
+            font-weight: 600;
+            text-align: left;
+            line-height: 1.5;
+        }
+
+        .btn-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            font-family: "Source Code Pro", monospace;
+            font-size: 1rem;
+            font-weight: 500;
+            padding: 1rem 1.5rem;
+            border: 2px solid #000000;
+            background-color: #ffffff;
+            color: #000000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            border-radius: 4px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .btn:hover {
+            background-color: #000000;
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.selected {
+            background-color: #000000;
+            color: #ffffff;
+        }
+
+        .btn.correct {
+            background-color: #000000;
+            color: #ffffff;
+            border-color: #333333;
+        }
+
+        .btn.incorrect {
+            background-color: #666666;
+            color: #ffffff;
+            border-color: #444444;
+        }
+
+        .btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #666666;
+        }
+
+        .loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid #000000;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            margin-left: 10px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Score and Progress */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            border: 1px solid #000000;
+            border-radius: 4px;
+            background-color: #ffffff;
+        }
+
+        .score, .progress {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #000000;
+        }
+
+        .next-btn {
+            margin-top: 2rem;
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            background-color: #000000;
+            color: #ffffff;
+            border: 2px solid #000000;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        .next-btn:hover {
+            background-color: #ffffff;
+            color: #000000;
+        }
+
+        .next-btn.show {
+            display: inline-block;
+        }
+
+        /* Game Over Screen */
+        .game-over {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            border: 2px solid #000000;
+            border-radius: 8px;
+            background-color: #ffffff;
+        }
+
+        .game-over.show {
+            display: block;
+        }
+
+        .final-score {
+            font-size: 2rem;
+            margin: 1rem 0;
+            color: #000000;
+        }
+
+        .restart-btn {
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            background-color: #000000;
+            color: #ffffff;
+            border: 2px solid #000000;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .restart-btn:hover {
+            background-color: #ffffff;
+            color: #000000;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .question-container {
+                padding: 1.5rem;
+            }
+
+            .btn-container {
+                grid-template-columns: 1fr;
+            }
+
+            .quiz-header {
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .subtitle {
+                font-size: 0.9rem;
+                margin-bottom: 2rem;
+            }
+
+            #question {
+                font-size: 1.1rem;
+            }
+
+            .btn {
+                font-size: 0.9rem;
+                padding: 0.8rem 1rem;
+            }
+        }
