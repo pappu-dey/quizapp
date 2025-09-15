@@ -1,0 +1,58 @@
+*{
+    background-color: #ffff;
+    box-sizing: border-box;
+  font-family: "Source Code Pro", monospace;
+  margin-top: 0;
+  padding: 0;
+  align-items: center;
+  }
+h1,
+h2,
+h3,
+h4{
+    margin-bottom: 1rem;
+
+}
+h1{
+    font-size: 5.4rem;
+    color: black;
+    margin-bottom: 4rem;
+}
+h1 >span{
+    font: 2.4rem;
+    font-weight: 500;
+}
+h2{
+    font-size: 4.2rem;
+    font-weight: 500;
+}
+.container{
+    width:100vh;
+    height:100vh ;
+    display: flex;
+    justify-self: center;
+    align-items: center;
+    max-width: 80rem;
+    margin: 0;
+}
+.btn{
+    font-size: 1.8rem;
+    padding: 1rem 0;
+    width: 20rem;
+    text-align: center;
+    border: 0.1rem solid black;
+    text-decoration: none;
+    background-color: azure;
+    display: flex;
+    color: black;
+    flex-direction: column;
+    margin-bottom: 1.5rem;
+    box-shadow: inset black;
+}
+.btn:hover{
+    font-size: 1.8rem;
+    background-color: black;
+    color: white;
+    }
+
+    
